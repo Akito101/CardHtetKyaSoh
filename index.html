@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>CardHtetKyaSoh</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>Unity Web Player | CardHtetKyaSoh</title>
 
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-        html, body {
+        html,
+        body {
             width: 100%;
             height: 100%;
             margin: 0;
@@ -31,23 +35,31 @@
             inset: 0;
             width: 100%;
             height: 100%;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             background: #000;
             overflow: hidden;
         }
 
         #unity-canvas {
             display: block;
+
+            /* Maintain a 9:16 portrait ratio. */
             width: min(100vw, 56.25vh) !important;
             height: min(177.7778vw, 100vh) !important;
+
             aspect-ratio: 9 / 16;
             background: #000;
             border: 0;
         }
 
-        /* Keep the correct ratio when the canvas enters fullscreen. */
+        /*
+         * Preserve the portrait dimensions when the canvas
+         * enters native browser fullscreen.
+         */
         #unity-canvas:fullscreen {
             position: fixed !important;
             inset: 0 !important;
@@ -59,7 +71,7 @@
             background: #000;
         }
 
-        /* Safari / iPad fullscreen compatibility. */
+        /* Safari fullscreen compatibility. */
         #unity-canvas:-webkit-full-screen {
             position: fixed !important;
             inset: 0 !important;
@@ -71,7 +83,10 @@
             background: #000;
         }
 
-        /* Hide the standard footer and fullscreen button. */
+        /*
+         * Hide Unity's original footer.
+         * We use our own fullscreen button instead.
+         */
         #unity-footer {
             display: none !important;
         }
@@ -87,34 +102,83 @@
             top: 0;
             width: 100%;
         }
+
+        #mobile-fullscreen-button {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+
+            padding: 10px 14px;
+
+            color: #fff;
+            background: #222;
+            border: 1px solid #888;
+            border-radius: 8px;
+
+            font-size: 14px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        #mobile-fullscreen-button:active {
+            background: #444;
+        }
+
+        /* Hide the button when native fullscreen is active. */
+        :fullscreen #mobile-fullscreen-button {
+            display: none;
+        }
+
+        :-webkit-full-screen #mobile-fullscreen-button {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
     <div id="unity-container">
-        <canvas id="unity-canvas"
-                width="540"
-                height="960"
-                tabindex="-1"></canvas>
+
+        <canvas
+            id="unity-canvas"
+            width="540"
+            height="960"
+            tabindex="-1"
+        ></canvas>
 
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
+
             <div id="unity-progress-bar-empty">
                 <div id="unity-progress-bar-full"></div>
             </div>
         </div>
 
         <div id="unity-warning"></div>
+
     </div>
+
+    <button id="mobile-fullscreen-button" type="button">
+        ⛶ Fullscreen
+    </button>
 
     <script>
         const canvas = document.querySelector("#unity-canvas");
 
+        const fullscreenButton = document.querySelector(
+            "#mobile-fullscreen-button"
+        );
+
+        /*
+         * Display Unity warnings and errors.
+         */
         function unityShowBanner(msg, type) {
-            const warningBanner =
-                document.querySelector("#unity-warning");
+            const warningBanner = document.querySelector(
+                "#unity-warning"
+            );
 
             const div = document.createElement("div");
+
             div.textContent = msg;
 
             if (type === "error") {
@@ -134,13 +198,18 @@
             warningBanner.appendChild(div);
         }
 
+        /*
+         * Unity WebGL build configuration.
+         */
         const buildUrl = "Build";
 
         const config = {
             arguments: [],
+
             dataUrl: buildUrl + "/BuildTest.data",
             frameworkUrl: buildUrl + "/BuildTest.framework.js",
             codeUrl: buildUrl + "/BuildTest.wasm",
+
             streamingAssetsUrl: "StreamingAssets",
 
             companyName: "101interactive",
@@ -150,10 +219,15 @@
             showBanner: unityShowBanner
         };
 
-        document.querySelector("#unity-loading-bar").style.display =
-            "block";
+        document.querySelector(
+            "#unity-loading-bar"
+        ).style.display = "block";
 
+        /*
+         * Load the Unity WebGL loader.
+         */
         const script = document.createElement("script");
+
         script.src = buildUrl + "/BuildTest.loader.js";
 
         script.onload = () => {
@@ -161,34 +235,113 @@
                 canvas,
                 config,
                 (progress) => {
-                    const progressBar =
-                        document.querySelector(
-                            "#unity-progress-bar-full"
-                        );
+                    const progressBar = document.querySelector(
+                        "#unity-progress-bar-full"
+                    );
 
                     if (progressBar) {
                         progressBar.style.width =
                             (100 * progress) + "%";
                     }
                 }
-            ).then((unityInstance) => {
+            )
+            .then((unityInstance) => {
+                window.unityInstance = unityInstance;
+
                 document.querySelector(
                     "#unity-loading-bar"
                 ).style.display = "none";
 
-                // Unity's fullscreen button, if called elsewhere,
-                // continues to use Unity's normal fullscreen API.
-                window.unityInstance = unityInstance;
+                /*
+                 * Request fullscreen when the user taps the button.
+                 * The request must happen directly from the user's
+                 * click/touch event.
+                 */
+                fullscreenButton.addEventListener(
+                    "click",
+                    async () => {
+                        try {
+                            /*
+                             * Prefer native browser fullscreen.
+                             */
+                            if (canvas.requestFullscreen) {
+                                await canvas.requestFullscreen();
 
-            }).catch((message) => {
-                alert(message);
+                            } else if (
+                                canvas.webkitRequestFullscreen
+                            ) {
+                                canvas.webkitRequestFullscreen();
+
+                            } else {
+                                /*
+                                 * Fall back to Unity fullscreen.
+                                 */
+                                unityInstance.SetFullscreen(1);
+                            }
+
+                        } catch (error) {
+                            console.warn(
+                                "Native fullscreen failed:",
+                                error
+                            );
+
+                            /*
+                             * Try Unity's fullscreen API if
+                             * native fullscreen is unavailable.
+                             */
+                            try {
+                                unityInstance.SetFullscreen(1);
+
+                            } catch (fallbackError) {
+                                console.error(
+                                    "Fullscreen is not supported:",
+                                    fallbackError
+                                );
+
+                                alert(
+                                    "Fullscreen is not supported " +
+                                    "by this browser. Try opening " +
+                                    "the game in another browser."
+                                );
+                            }
+                        }
+                    }
+                );
+
+                /*
+                 * Restore the button if fullscreen is exited.
+                 */
+                document.addEventListener(
+                    "fullscreenchange",
+                    () => {
+                        fullscreenButton.style.display =
+                            document.fullscreenElement
+                                ? "none"
+                                : "block";
+                    }
+                );
+
+                document.addEventListener(
+                    "webkitfullscreenchange",
+                    () => {
+                        fullscreenButton.style.display =
+                            document.webkitFullscreenElement
+                                ? "none"
+                                : "block";
+                    }
+                );
+            })
+            .catch((message) => {
+                console.error(message);
+                alert("Unable to load the Unity game: " + message);
             });
         };
 
         script.onerror = () => {
             alert(
                 "Failed to load the Unity game. " +
-                "Please check that the Build folder exists."
+                "Please check that the Build folder exists " +
+                "and contains BuildTest.loader.js."
             );
         };
 

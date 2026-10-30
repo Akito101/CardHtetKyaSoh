@@ -70,6 +70,16 @@
             background: #000;
         }
 
+        /* In fullscreen, size the 9:16 canvas straight from the screen (same as the original). */
+        #unity-container:fullscreen #unity-canvas {
+            width: min(100vw, 56.25vh) !important;
+            height: min(177.7778vw, 100vh) !important;
+        }
+        #unity-container:-webkit-full-screen #unity-canvas {
+            width: min(100vw, 56.25vh) !important;
+            height: min(177.7778vw, 100vh) !important;
+        }
+
         #unity-footer { display: none !important; }
 
         #unity-loading-bar { position: absolute; z-index: 2; display: block; }
@@ -241,9 +251,14 @@
          * Fullscreen button
          * ------------------------------------------------------------------ */
         function updateButton() {
-            fsButton.textContent = getFullscreenElement()
-                ? "✕ Exit"
-                : "⛶ Fullscreen";
+            const isFullscreen = !!getFullscreenElement();
+
+            fsButton.textContent = isFullscreen ? "✕ Exit" : "⛶ Fullscreen";
+
+            // PC: hide the button while fullscreen (press Esc to exit), show it again after.
+            // Mobile: keep an Exit button visible.
+            fsButton.style.display = (isFullscreen && !isMobile) ? "none" : "";
+
             layoutSoon();
         }
 

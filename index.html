@@ -1,380 +1,133 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en-us">
+  <head>
     <meta charset="utf-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
-    <title>Unity Web Player | CardHtetKyaSoh</title>
-
-    <!-- Home-screen fullscreen on iPhone works with these meta tags alone (no manifest needed) -->
-    <meta name="theme-color" content="#000000">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CardHtetKyaSoh">
-
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity Web Player | SchoolCardFight</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
-
-    <style>
-        :root {
-            /* Set by JS (visible viewport size). Fallbacks use dvh, then vh. */
-            --app-w: 100vw;
-            --app-h: 100vh;
-        }
-        @supports (height: 100dvh) {
-            :root { --app-w: 100dvw; --app-h: 100dvh; }
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #000;
-            overscroll-behavior: none;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        #unity-container {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-            overflow: hidden;
-            touch-action: none;
-        }
-
-        /* 9:16 portrait canvas, sized by JS (CSS fallback below). */
-        #unity-canvas {
-            display: block;
-            flex: 0 0 auto;
-            width: min(var(--app-w), calc(var(--app-h) * 0.5625));
-            height: min(calc(var(--app-w) * 1.7778), var(--app-h));
-            background: #000;
-            border: 0;
-            outline: none;
-        }
-
-        #unity-container:fullscreen,
-        #unity-container:-webkit-full-screen {
-            width: 100%;
-            height: 100%;
-            background: #000;
-        }
-
-        #unity-footer { display: none !important; }
-
-        #unity-loading-bar { position: absolute; z-index: 2; display: block; }
-        #unity-warning     { position: absolute; z-index: 3; top: 0; width: 100%; }
-
-        /* Fullscreen button (lives inside the container so it stays visible in fullscreen) */
-        #fullscreen-button {
-            position: absolute;
-            z-index: 1000;
-            top: calc(env(safe-area-inset-top, 0px) + 10px);
-            right: calc(env(safe-area-inset-right, 0px) + 10px);
-            padding: 9px 13px;
-            color: #fff;
-            background: rgba(34, 34, 34, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            border-radius: 8px;
-            font: 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            cursor: pointer;
-            touch-action: manipulation;
-            opacity: 0.85;
-        }
-        #fullscreen-button:hover  { opacity: 1; }
-        #fullscreen-button:active { background: rgba(80, 80, 80, 0.9); }
-        #fullscreen-button[hidden] { display: none; }
-
-        /* iPhone "Add to Home Screen" hint */
-        #install-hint {
-            position: absolute;
-            inset: 0;
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: rgba(0, 0, 0, 0.82);
-            font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            color: #fff;
-            text-align: center;
-        }
-        #install-hint.show { display: flex; }
-        #install-hint .card {
-            max-width: 320px;
-            padding: 22px 20px;
-            background: #1e1e1e;
-            border: 1px solid #555;
-            border-radius: 14px;
-        }
-        #install-hint h2 { margin: 0 0 10px; font-size: 18px; }
-        #install-hint p  { margin: 0 0 16px; color: #ddd; }
-        #install-hint button {
-            padding: 10px 22px;
-            color: #fff;
-            background: #3a7afe;
-            border: 0;
-            border-radius: 8px;
-            font-size: 15px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-
-<body>
-    <div id="unity-container">
-        <canvas id="unity-canvas" width="540" height="960" tabindex="-1"></canvas>
-
-        <div id="unity-loading-bar">
-            <div id="unity-logo"></div>
-            <div id="unity-progress-bar-empty">
-                <div id="unity-progress-bar-full"></div>
-            </div>
+  </head>
+  <body>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
         </div>
-
-        <div id="unity-warning"></div>
-
-        <button id="fullscreen-button" type="button" aria-label="Toggle fullscreen">⛶ Fullscreen</button>
-
-        <div id="install-hint" role="dialog" aria-modal="true">
-            <div class="card">
-                <h2>Play in fullscreen</h2>
-                <p>iPhone browsers don't allow fullscreen on web pages.<br><br>
-                   Tap the <strong>Share</strong> button, then
-                   <strong>Add to Home Screen</strong>, and open the game from there.</p>
-                <button id="install-hint-close" type="button">Got it</button>
-            </div>
-        </div>
+      </div>
+      <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-logo-title-footer"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">SchoolCardFight</div>
+      </div>
     </div>
-
     <script>
-        const canvas = document.querySelector("#unity-canvas");
-        const container = document.querySelector("#unity-container");
-        const fsButton = document.querySelector("#fullscreen-button");
-        const hint = document.querySelector("#install-hint");
-        const hintClose = document.querySelector("#install-hint-close");
+      var canvas = document.querySelector("#unity-canvas");
 
-        /* ------------------------------------------------------------------
-         * Environment detection
-         * ------------------------------------------------------------------ */
-        const ua = navigator.userAgent;
-
-        const isIPhone = /iPhone|iPod/i.test(ua);
-        const isIPad =
-            /iPad/i.test(ua) ||
-            (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-        const isMobile = isIPhone || isIPad || /Android/i.test(ua);
-
-        // Already running as an installed app / home-screen app?
-        const isStandalone =
-            window.navigator.standalone === true ||
-            window.matchMedia("(display-mode: standalone)").matches ||
-            window.matchMedia("(display-mode: fullscreen)").matches;
-
-        // Standard + Safari-prefixed Fullscreen API on a normal element.
-        const requestFS =
-            container.requestFullscreen ||
-            container.webkitRequestFullscreen ||
-            container.msRequestFullscreen;
-
-        const exitFS =
-            document.exitFullscreen ||
-            document.webkitExitFullscreen ||
-            document.msExitFullscreen;
-
-        const canNativeFullscreen =
-            !!requestFS &&
-            (document.fullscreenEnabled !== false) &&
-            (document.webkitFullscreenEnabled !== false);
-
-        function getFullscreenElement() {
-            return (
-                document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.msFullscreenElement ||
-                null
-            );
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
         }
-
-        /* ------------------------------------------------------------------
-         * Layout: keep a 9:16 canvas fitted to the *visible* viewport.
-         * (window.innerHeight / visualViewport excludes mobile browser bars.)
-         * ------------------------------------------------------------------ */
-        function layout() {
-            const vv = window.visualViewport;
-            const w = Math.floor(vv ? vv.width : window.innerWidth);
-            const h = Math.floor(vv ? vv.height : window.innerHeight);
-
-            const root = document.documentElement.style;
-            root.setProperty("--app-w", w + "px");
-            root.setProperty("--app-h", h + "px");
-
-            // Make sure the page itself never scrolls.
-            window.scrollTo(0, 0);
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
         }
+        updateBannerVisibility();
+      }
 
-        function layoutSoon() {
-            layout();
-            // Browsers report the final size a moment after rotation / fullscreen.
-            setTimeout(layout, 100);
-            setTimeout(layout, 350);
-        }
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/BuildTest.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/BuildTest.data.br",
+        frameworkUrl: buildUrl + "/BuildTest.framework.js.br",
+        codeUrl: buildUrl + "/BuildTest.wasm.br",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "SchoolCardFight",
+        productVersion: "0.1.0",
+        showBanner: unityShowBanner,
+        // errorHandler: function(err, url, line) {
+        //    alert("error " + err + " occurred at line " + line);
+        //    // Return 'true' if you handled this error and don't want Unity
+        //    // to process it further, 'false' otherwise.
+        //    return true;
+        // },
+      };
 
-        window.addEventListener("resize", layoutSoon);
-        window.addEventListener("orientationchange", layoutSoon);
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener("resize", layoutSoon);
-        }
-        layout();
+      // By default, Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
 
-        /* ------------------------------------------------------------------
-         * Fullscreen button
-         * ------------------------------------------------------------------ */
-        function updateButton() {
-            fsButton.textContent = getFullscreenElement()
-                ? "✕ Exit"
-                : "⛶ Fullscreen";
-            layoutSoon();
-        }
+      // If you would like all file writes inside Unity Application.persistentDataPath
+      // directory to automatically persist so that the contents are remembered when
+      // the user revisits the site the next time, uncomment the following line:
+      // config.autoSyncPersistentDataPath = true;
+      // This autosyncing is currently not the default behavior to avoid regressing
+      // existing user projects that might rely on the earlier manual
+      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+      // expected to change.
 
-        document.addEventListener("fullscreenchange", updateButton);
-        document.addEventListener("webkitfullscreenchange", updateButton);
-        document.addEventListener("MSFullscreenChange", updateButton);
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
 
-        async function toggleFullscreen() {
-            try {
-                if (getFullscreenElement()) {
-                    await exitFS.call(document);
-                    return;
-                }
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
 
-                if (canNativeFullscreen) {
-                    const result = requestFS.call(container, { navigationUI: "hide" });
-                    if (result && result.then) await result;
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        // config.devicePixelRatio = 1;
 
-                    // Optional: lock to portrait on Android once fullscreen.
-                    try {
-                        if (screen.orientation && screen.orientation.lock) {
-                            await screen.orientation.lock("portrait");
-                        }
-                    } catch (_) { /* not supported / not allowed: ignore */ }
 
-                    return;
-                }
+      } else {
+        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+        canvas.style.width = "960px";
+        canvas.style.height = "600px";
+      }
 
-                // No element fullscreen (iPhone Safari, some in-app browsers).
-                hint.classList.add("show");
-            } catch (error) {
-                console.warn("Fullscreen request failed:", error);
-                // Blocked (in-app browser, iframe without allow="fullscreen", etc.)
-                hint.classList.add("show");
-            }
-        }
+      document.querySelector("#unity-loading-bar").style.display = "block";
 
-        fsButton.addEventListener("click", toggleFullscreen);
-        hintClose.addEventListener("click", () => hint.classList.remove("show"));
-        hint.addEventListener("click", (e) => {
-            if (e.target === hint) hint.classList.remove("show");
-        });
-
-        // Already fullscreen as an installed app -> the button isn't needed.
-        if (isStandalone) {
-            fsButton.hidden = true;
-        }
-
-        /* ------------------------------------------------------------------
-         * Misc touch polish: stop pinch-zoom / double-tap zoom / context menu.
-         * ------------------------------------------------------------------ */
-        document.addEventListener("gesturestart", (e) => e.preventDefault());
-        container.addEventListener("contextmenu", (e) => e.preventDefault());
-        document.addEventListener(
-            "touchmove",
-            (e) => { if (e.touches.length > 1) e.preventDefault(); },
-            { passive: false }
-        );
-
-        /* ------------------------------------------------------------------
-         * Unity banner (warnings / errors)
-         * ------------------------------------------------------------------ */
-        function unityShowBanner(msg, type) {
-            const warningBanner = document.querySelector("#unity-warning");
-            const div = document.createElement("div");
-            div.textContent = msg;
-
-            if (type === "error") {
-                div.style.cssText = "background:red;color:white;padding:10px;";
-            } else {
-                div.style.cssText = "background:yellow;color:black;padding:10px;";
-                setTimeout(() => {
-                    if (div.parentNode) div.parentNode.removeChild(div);
-                }, 5000);
-            }
-            warningBanner.appendChild(div);
-        }
-
-        /* ------------------------------------------------------------------
-         * Unity WebGL build
-         * ------------------------------------------------------------------ */
-        const buildUrl = "Build";
-
-        const config = {
-            arguments: [],
-
-            dataUrl: buildUrl + "/BuildTest.data",
-            frameworkUrl: buildUrl + "/BuildTest.framework.js",
-            codeUrl: buildUrl + "/BuildTest.wasm",
-
-            streamingAssetsUrl: "StreamingAssets",
-
-            companyName: "101interactive",
-            productName: "CardHtetKyaSoh",
-            productVersion: "0.1.0",
-
-            // Cap render resolution on phones for smoother performance.
-            devicePixelRatio: isMobile
-                ? Math.min(window.devicePixelRatio || 1, 2)
-                : (window.devicePixelRatio || 1),
-
-            showBanner: unityShowBanner
-        };
-
-        const script = document.createElement("script");
-        script.src = buildUrl + "/BuildTest.loader.js";
-
-        script.onload = () => {
-            createUnityInstance(canvas, config, (progress) => {
-                const bar = document.querySelector("#unity-progress-bar-full");
-                if (bar) bar.style.width = (100 * progress) + "%";
-            })
-            .then((unityInstance) => {
-                window.unityInstance = unityInstance;
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+              }).then((unityInstance) => {
                 document.querySelector("#unity-loading-bar").style.display = "none";
-                layoutSoon();
-            })
-            .catch((message) => {
-                console.error(message);
-                alert("Unable to load the Unity game: " + message);
-            });
-        };
+                document.querySelector("#unity-fullscreen-button").onclick = () => {
+                  unityInstance.SetFullscreen(1);
+                };
 
-        script.onerror = () => {
-            alert(
-                "Failed to load the Unity game. " +
-                "Check that the Build folder contains BuildTest.loader.js."
-            );
-        };
+              }).catch((message) => {
+                alert(message);
+              });
+            };
 
-        document.body.appendChild(script);
+      document.body.appendChild(script);
+
     </script>
-</body>
+  </body>
 </html>
